@@ -66,6 +66,12 @@ public class WandererController : MonoBehaviour
         rb.velocity = dir * moveSpeed;
 
         animator.SetFloat("Speed", rb.velocity.magnitude);
+
+        // Flip horizontal
+        if (dir.x > 0)
+            transform.localScale = new Vector3(1, 1, 1);
+        else if (dir.x < 0)
+            transform.localScale = new Vector3(-1, 1, 1);
     }
 
     void AttackPlayer()
@@ -99,6 +105,20 @@ public class WandererController : MonoBehaviour
             Die();
     }
 
+    // ======================================
+    // MÉTODO PARA CAUSAR DANO AO PLAYER
+    // ======================================
+    public void DamagePlayer()
+    {
+        if (player != null)
+        {
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.TakeDamage(damage);
+            }
+        }
+    }
 
     void Die()
     {

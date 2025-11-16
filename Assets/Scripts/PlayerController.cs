@@ -106,10 +106,11 @@ public class PlayerController : MonoBehaviour
             WandererController wanderer = hit.GetComponent<WandererController>();
             if (wanderer != null)
             {
-                wanderer.TakeDamage(attackDamage);
+                wanderer.TakeDamage(currentDamage);
             }
         }
     }
+
 
     void OnDrawGizmosSelected()
     {
@@ -117,20 +118,20 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 
-    private System.Collections.IEnumerator AttackRoutine()
+    private IEnumerator AttackRoutine()
     {
         isAttacking = true;
         anim.SetBool("IsAttacking", true);
 
-        // aqui você usa currentDamage quando for dar dano em um inimigo
-        // Exemplo:
-        // damageComponent.ApplyDamage(currentDamage);
+        yield return new WaitForSeconds(attackDuration * 0.4f);
+        DealDamage();   // ADICIONAR ISSO!
 
-        yield return new WaitForSeconds(attackDuration);
+        yield return new WaitForSeconds(attackDuration * 0.6f);
 
         anim.SetBool("IsAttacking", false);
         isAttacking = false;
     }
+
 
     // -------------------------------
     // TRANSFORMATION
