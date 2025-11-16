@@ -9,10 +9,16 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer sr;
 
     [Header("Movement")]
-    public float moveSpeed = 5f;
+    public float normalMoveSpeed = 1f;
+    public float transformedMoveSpeed = 1.5f;
+    private float moveSpeed;
     private Vector2 input;
 
     [Header("Combat")]
+    public int normalDamage = 10;
+    public int transformedDamage = 40;
+    private int currentDamage;
+
     public float attackDuration = 0.35f;
     private bool isAttacking = false;
 
@@ -32,7 +38,12 @@ public class PlayerController : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
+
         currentHealth = maxHealth;
+
+        // Inicializa atributos como forma normal
+        moveSpeed = normalMoveSpeed;
+        currentDamage = normalDamage;
     }
 
     private void Update()
@@ -45,15 +56,11 @@ public class PlayerController : MonoBehaviour
 
         // Transformar
         if (Input.GetKeyDown(KeyCode.T) && !isTransformed)
-        {
             Transform();
-        }
 
         // Voltar ao normal
         if (Input.GetKeyDown(KeyCode.G) && isTransformed)
-        {
             RevertTransformation();
-        }
     }
 
     // -------------------------------
@@ -69,14 +76,14 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(input.x, input.y, 0f).normalized;
         transform.position += move * moveSpeed * Time.deltaTime;
 
-        // Flip
         if (input.x > 0) sr.flipX = false;
-        else if (input.x < 0) sr.flipX = true;
+        if (input.x < 0) sr.flipX = true;
     }
 
     // -------------------------------
     // ATTACK
     // -------------------------------
+
     private void HandleAttack()
     {
         if (Input.GetKeyDown(KeyCode.Space) && !isAttacking)
@@ -85,10 +92,39 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public Transform attackPoint;
+    public float attackRange = 0.5f;
+    public LayerMask enemyLayer;
+    public int attackDamage = 10;
+
+    void DealDamage()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
+
+        foreach (Collider2D hit in hits)
+        {
+            WandererController wanderer = hit.GetComponent<WandererController>();
+            if (wanderer != null)
+            {
+                wanderer.TakeDamage(attackDamage);
+            }
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    }
+
     private System.Collections.IEnumerator AttackRoutine()
     {
         isAttacking = true;
         anim.SetBool("IsAttacking", true);
+
+        // aqui você usa currentDamage quando for dar dano em um inimigo
+        // Exemplo:
+        // damageComponent.ApplyDamage(currentDamage);
 
         yield return new WaitForSeconds(attackDuration);
 
@@ -115,12 +151,22 @@ public class PlayerController : MonoBehaviour
 
     private System.Collections.IEnumerator TransformRoutine(bool goingToTransformed)
     {
-        // Muda parâmetro do Animator
         anim.SetBool("IsTransformed", goingToTransformed);
         isTransformed = goingToTransformed;
 
-        // Piscar vermelho ao transformar
-        // Piscar azul ao voltar ao normal
+        // Troca atributos
+        if (goingToTransformed)
+        {
+            moveSpeed = transformedMoveSpeed;
+            currentDamage = transformedDamage;
+        }
+        else
+        {
+            moveSpeed = normalMoveSpeed;
+            currentDamage = normalDamage;
+        }
+
+        // Efeito de piscar
         Color blinkColor = goingToTransformed ? Color.red : Color.cyan;
 
         for (int i = 0; i < blinkCount; i++)
@@ -135,7 +181,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // -------------------------------
-    // HEALTH & DEATH
+    // HEALTH
     // -------------------------------
     public void TakeDamage(int amount)
     {
@@ -157,7 +203,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // -------------------------------
-    // ANIMATOR VALUES
+    // ANIMATOR
     // -------------------------------
     private void UpdateAnimator()
     {
