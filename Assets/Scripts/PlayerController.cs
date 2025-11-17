@@ -205,6 +205,9 @@ public class PlayerController : MonoBehaviour
         isDead = true;
         anim.SetBool("IsDead", true);
         input = Vector2.zero;
+
+        GameUIManager.Instance.ShowDefeat();
+
     }
 
     // -------------------------------
