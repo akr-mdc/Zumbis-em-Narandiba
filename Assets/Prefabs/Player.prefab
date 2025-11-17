@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1415653409924235847}
   - component: {fileID: 2771765259564141046}
   - component: {fileID: 5314654151966198350}
+  - component: {fileID: 2028293696427643221}
   - component: {fileID: 1852858239925131202}
   m_Layer: 2
   m_Name: Player
@@ -136,6 +137,41 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
+--- !u!70 &2028293696427643221
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1574671120636863087}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.020274162, y: -0.049762726}
+  m_Size: {x: 0.17783546, y: 0.4137497}
+  m_Direction: 0
 --- !u!114 &1852858239925131202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,21 +184,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 831856d109b40af4692e641fac864d2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
-  maxHealth: 100
-  attackPoint: {fileID: 263466368862505076}
-  attackRangeNormal: 0.2
-  attackRangeTransformed: 0.5
-  enemyLayers:
-    serializedVersion: 2
-    m_Bits: 0
+  normalMoveSpeed: 1
+  transformedMoveSpeed: 1.5
+  normalDamage: 10
+  transformedDamage: 40
+  attackDuration: 0.35
   isTransformed: 0
-  normalColliderOffset: {x: 0, y: 0}
-  normalColliderSize: {x: 0, y: 0}
-  transformedColliderOffset: {x: 0, y: 0}
-  transformedColliderSize: {x: 0, y: 0}
-  normalAttackPointOffset: {x: 0, y: 0}
-  transformedAttackPointOffset: {x: 0, y: 0}
+  blinkDuration: 1
+  blinkCount: 6
+  maxHealth: 100
+  currentHealth: 0
+  attackPoint: {fileID: 263466368862505076}
+  attackRange: 0.3
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  attackDamage: 10
 --- !u!1 &3053495122153204930
 GameObject:
   m_ObjectHideFlags: 0
