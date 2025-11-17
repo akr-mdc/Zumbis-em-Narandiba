@@ -18,9 +18,13 @@ public class PlayerController : MonoBehaviour
     public int normalDamage = 10;
     public int transformedDamage = 40;
     private int currentDamage;
-
     public float attackDuration = 0.35f;
     private bool isAttacking = false;
+
+    [Header("Attack Detection")]
+    public Transform attackPoint;
+    public float attackRange = 0.5f;
+    public LayerMask enemyLayers;
 
     [Header("Transformation")]
     public bool isTransformed = false;
@@ -31,7 +35,6 @@ public class PlayerController : MonoBehaviour
     [Header("Health")]
     public int maxHealth = 100;
     public int currentHealth;
-
     private bool isDead = false;
 
     private void Start()
@@ -39,11 +42,9 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
 
-        currentHealth = maxHealth;
-
-        // Inicializa atributos como forma normal
         moveSpeed = normalMoveSpeed;
         currentDamage = normalDamage;
+        currentHealth = maxHealth;
     }
 
     private void Update()
@@ -54,18 +55,16 @@ public class PlayerController : MonoBehaviour
         HandleAttack();
         UpdateAnimator();
 
-        // Transformar
         if (Input.GetKeyDown(KeyCode.T) && !isTransformed)
             Transform();
 
-        // Voltar ao normal
         if (Input.GetKeyDown(KeyCode.G) && isTransformed)
             RevertTransformation();
     }
 
-    // -------------------------------
+    // ============================
     // MOVEMENT
-    // -------------------------------
+    // ============================
     private void HandleMovement()
     {
         if (isAttacking) return;
@@ -76,46 +75,18 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(input.x, input.y, 0f).normalized;
         transform.position += move * moveSpeed * Time.deltaTime;
 
+        // Flip
         if (input.x > 0) sr.flipX = false;
         if (input.x < 0) sr.flipX = true;
     }
 
-    // -------------------------------
-    // ATTACK
-    // -------------------------------
-
+    // ============================
+    // COMBAT
+    // ============================
     private void HandleAttack()
     {
         if (Input.GetKeyDown(KeyCode.Space) && !isAttacking)
-        {
             StartCoroutine(AttackRoutine());
-        }
-    }
-
-    public Transform attackPoint;
-    public float attackRange = 0.5f;
-    public LayerMask enemyLayer;
-    public int attackDamage = 10;
-
-    void DealDamage()
-    {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
-
-        foreach (Collider2D hit in hits)
-        {
-            WandererController wanderer = hit.GetComponent<WandererController>();
-            if (wanderer != null)
-            {
-                wanderer.TakeDamage(currentDamage);
-            }
-        }
-    }
-
-
-    void OnDrawGizmosSelected()
-    {
-        if (attackPoint == null) return;
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 
     private IEnumerator AttackRoutine()
@@ -124,7 +95,8 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("IsAttacking", true);
 
         yield return new WaitForSeconds(attackDuration * 0.4f);
-        DealDamage();   // ADICIONAR ISSO!
+
+        DealDamage(); // agora funciona com qualquer inimigo
 
         yield return new WaitForSeconds(attackDuration * 0.6f);
 
@@ -132,42 +104,57 @@ public class PlayerController : MonoBehaviour
         isAttacking = false;
     }
 
+    private void DealDamage()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            attackPoint.position,
+            attackRange,
+            enemyLayers
+        );
 
-    // -------------------------------
+        foreach (Collider2D hit in hits)
+        {
+            // Pega QUALQUER inimigo que implemente a interface
+            IEnemyDamageable enemy = hit.GetComponent<IEnemyDamageable>();
+
+            if (enemy != null)
+            {
+                enemy.TakeDamage(currentDamage);
+            }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    }
+
+    // ============================
     // TRANSFORMATION
-    // -------------------------------
+    // ============================
     public void Transform()
     {
         if (isTransforming || isDead) return;
-        isTransforming = true;
         StartCoroutine(TransformRoutine(true));
     }
 
     public void RevertTransformation()
     {
         if (isTransforming || isDead) return;
-        isTransforming = true;
         StartCoroutine(TransformRoutine(false));
     }
 
-    private System.Collections.IEnumerator TransformRoutine(bool goingToTransformed)
+    private IEnumerator TransformRoutine(bool goingToTransformed)
     {
+        isTransforming = true;
         anim.SetBool("IsTransformed", goingToTransformed);
         isTransformed = goingToTransformed;
 
-        // Troca atributos
-        if (goingToTransformed)
-        {
-            moveSpeed = transformedMoveSpeed;
-            currentDamage = transformedDamage;
-        }
-        else
-        {
-            moveSpeed = normalMoveSpeed;
-            currentDamage = normalDamage;
-        }
+        moveSpeed = goingToTransformed ? transformedMoveSpeed : normalMoveSpeed;
+        currentDamage = goingToTransformed ? transformedDamage : normalDamage;
 
-        // Efeito de piscar
         Color blinkColor = goingToTransformed ? Color.red : Color.cyan;
 
         for (int i = 0; i < blinkCount; i++)
@@ -181,19 +168,15 @@ public class PlayerController : MonoBehaviour
         isTransforming = false;
     }
 
-    // -------------------------------
+    // ============================
     // HEALTH
-    // -------------------------------
+    // ============================
     public void TakeDamage(int amount)
     {
         if (isDead) return;
 
         currentHealth -= amount;
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (currentHealth <= 0) Die();
     }
 
     private void Die()
@@ -203,9 +186,9 @@ public class PlayerController : MonoBehaviour
         input = Vector2.zero;
     }
 
-    // -------------------------------
+    // ============================
     // ANIMATOR
-    // -------------------------------
+    // ============================
     private void UpdateAnimator()
     {
         anim.SetFloat("Speed", input.magnitude);
