@@ -140,6 +140,16 @@ public class WandererController : MonoBehaviour
             Die();
     }
 
+    public bool IsDead()
+    {
+        return isDead;
+    }
+
+    public float GetLifePercent()
+    {
+        return (float)currentHealth / (float)maxHealth;
+    }
+
     System.Collections.IEnumerator HitFlash()
     {
         sr.color = Color.red;
