@@ -170,6 +170,9 @@ public class WandererController : MonoBehaviour
 
         GetComponent<Collider2D>().enabled = false;
 
+        // Atualizar contador
+        UIManager.Instance.AddDefeatedEnemy();
+
         Destroy(gameObject, 2f);
     }
 

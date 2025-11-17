@@ -44,6 +44,9 @@ public class PlayerController : MonoBehaviour
         // Inicializa atributos como forma normal
         moveSpeed = normalMoveSpeed;
         currentDamage = normalDamage;
+
+        UIManager.Instance.UpdatePlayerHealth(currentHealth, maxHealth);
+
     }
 
     private void Update()
@@ -190,10 +193,11 @@ public class PlayerController : MonoBehaviour
 
         currentHealth -= amount;
 
+        // Atualizar UI
+        UIManager.Instance.UpdatePlayerHealth(currentHealth, maxHealth);
+
         if (currentHealth <= 0)
-        {
             Die();
-        }
     }
 
     private void Die()
