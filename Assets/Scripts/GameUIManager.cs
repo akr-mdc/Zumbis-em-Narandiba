@@ -10,7 +10,7 @@ public class GameUIManager : MonoBehaviour
     public GameObject victoryScreen;
     public GameObject defeatScreen;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
@@ -19,24 +19,35 @@ public class GameUIManager : MonoBehaviour
         defeatScreen.SetActive(false);
     }
 
-    // Chamado pela condição de vitória
+    // =====================
+    // TELAS
+    // =====================
+
     public void ShowVictory()
     {
         victoryScreen.SetActive(true);
-        Time.timeScale = 0f; // Pausa o jogo
+        Time.timeScale = 0f;
     }
 
-    // Chamado quando o player morre
     public void ShowDefeat()
     {
         defeatScreen.SetActive(true);
-        Time.timeScale = 0f; // Pausa o jogo
+        Time.timeScale = 0f;
     }
 
-    // Botão de Reinício
+    // =====================
+    // BOTÕES
+    // =====================
+
     public void RestartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneManager.LoadScene("GameScene");
+    }
+
+    public void GoToMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
     }
 }
