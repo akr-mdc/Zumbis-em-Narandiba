@@ -8,8 +8,8 @@ public class WandererController : MonoBehaviour
     public int maxHealth = 30;
     int currentHealth;
 
-    public float detectionRange = 5f;
-    public float attackRange = 1f;
+    public float detectionRange = 4f;
+    public float attackRange = 0.4f;
     public float moveSpeed = 2f;
     public int damage = 10;
 
@@ -17,6 +17,7 @@ public class WandererController : MonoBehaviour
     Animator animator;
     Rigidbody2D rb;
     Transform player;
+    SpriteRenderer sr;
 
     bool isDead = false;
     bool isAttacking = false;
@@ -27,6 +28,8 @@ public class WandererController : MonoBehaviour
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponent<SpriteRenderer>();
+
         player = GameObject.FindGameObjectWithTag("Player").transform;
     }
 
@@ -50,7 +53,9 @@ public class WandererController : MonoBehaviour
         }
     }
 
-
+    // ---------------------------------
+    // IDLE
+    // ---------------------------------
     void Idle()
     {
         rb.velocity = Vector2.zero;
@@ -58,32 +63,42 @@ public class WandererController : MonoBehaviour
         animator.SetBool("IsAttacking", false);
     }
 
+    // ---------------------------------
+    // MOVEMENT / CHASE
+    // ---------------------------------
     void ChasePlayer()
     {
         if (isAttacking) return;
 
-        Vector2 dir = (player.position - transform.position).normalized;
-        rb.velocity = dir * moveSpeed;
+        Vector2 direction = (player.position - transform.position).normalized;
+        rb.velocity = direction * moveSpeed;
 
         animator.SetFloat("Speed", rb.velocity.magnitude);
 
-        // Flip horizontal
-        if (dir.x > 0)
+        // Flip visual
+        if (direction.x > 0)
             transform.localScale = new Vector3(1, 1, 1);
-        else if (dir.x < 0)
+        else if (direction.x < 0)
             transform.localScale = new Vector3(-1, 1, 1);
     }
 
+    // ---------------------------------
+    // ATTACK
+    // ---------------------------------
     void AttackPlayer()
     {
         if (isAttacking) return;
 
+        isAttacking = true;
         rb.velocity = Vector2.zero;
 
-        isAttacking = true;
         animator.SetBool("IsAttacking", true);
 
-        Invoke(nameof(ResetAttack), 1f); // tempo da animação
+        // Aplicar o dano sincronizado com o golpe da animação
+        Invoke(nameof(DealDamage), 0.08f);  // Ajustar conforme a animação
+
+        // Tempo total do ataque / cooldown
+        Invoke(nameof(ResetAttack), 1f);
     }
 
     void ResetAttack()
@@ -92,7 +107,27 @@ public class WandererController : MonoBehaviour
         animator.SetBool("IsAttacking", false);
     }
 
+    void DealDamage()
+    {
+        if (player == null) return;
 
+        float dist = Vector2.Distance(transform.position, player.position);
+
+        // Confirma se o Player ainda está no range do golpe
+        if (dist <= attackRange + 0.4f)
+        {
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.TakeDamage(damage);
+                Debug.Log("Wanderer causou dano ao Player!");
+            }
+        }
+    }
+
+    // ---------------------------------
+    // DAMAGE TAKEN
+    // ---------------------------------
     public void TakeDamage(int amount)
     {
         if (isDead) return;
@@ -105,21 +140,16 @@ public class WandererController : MonoBehaviour
             Die();
     }
 
-    // ======================================
-    // MÉTODO PARA CAUSAR DANO AO PLAYER
-    // ======================================
-    public void DamagePlayer()
+    System.Collections.IEnumerator HitFlash()
     {
-        if (player != null)
-        {
-            PlayerController pc = player.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                pc.TakeDamage(damage);
-            }
-        }
+        sr.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        sr.color = Color.white;
     }
 
+    // ---------------------------------
+    // DEATH
+    // ---------------------------------
     void Die()
     {
         isDead = true;
@@ -127,23 +157,15 @@ public class WandererController : MonoBehaviour
         animator.SetBool("IsDead", true);
         rb.velocity = Vector2.zero;
         rb.isKinematic = true;
+
         GetComponent<Collider2D>().enabled = false;
 
         Destroy(gameObject, 2f);
     }
 
-
-    System.Collections.IEnumerator HitFlash()
-    {
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        sr.color = Color.red;
-
-        yield return new WaitForSeconds(0.1f);
-
-        sr.color = Color.white;
-    }
-
-
+    // ---------------------------------
+    // GIZMOS
+    // ---------------------------------
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
