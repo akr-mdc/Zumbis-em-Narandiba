@@ -30,12 +30,14 @@ public class WandererController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
 
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null)
+            player = p.transform;
     }
 
     void Update()
     {
-        if (isDead) return;
+        if (isDead || player == null) return;
 
         float distance = Vector2.Distance(transform.position, player.position);
 
@@ -77,9 +79,9 @@ public class WandererController : MonoBehaviour
 
         // Flip visual
         if (direction.x > 0)
-            transform.localScale = new Vector3(1, 1, 1);
+            sr.flipX = false;
         else if (direction.x < 0)
-            transform.localScale = new Vector3(-1, 1, 1);
+            sr.flipX = true;
     }
 
     // ---------------------------------
@@ -94,11 +96,11 @@ public class WandererController : MonoBehaviour
 
         animator.SetBool("IsAttacking", true);
 
-        // Aplicar o dano sincronizado com o golpe da animação
-        Invoke(nameof(DealDamage), 0.08f);  // Ajustar conforme a animação
+        // Momento exato do dano
+        Invoke(nameof(DealDamage), 0.12f);
 
-        // Tempo total do ataque / cooldown
-        Invoke(nameof(ResetAttack), 1f);
+        // Finaliza o ataque após cooldown
+        Invoke(nameof(ResetAttack), 0.8f);
     }
 
     void ResetAttack()
@@ -109,12 +111,12 @@ public class WandererController : MonoBehaviour
 
     void DealDamage()
     {
-        if (player == null) return;
+        if (player == null || isDead) return;
 
         float dist = Vector2.Distance(transform.position, player.position);
 
-        // Confirma se o Player ainda está no range do golpe
-        if (dist <= attackRange + 0.4f)
+        // Confere se o Player ainda está perto o suficiente
+        if (dist <= attackRange + 0.25f)
         {
             PlayerController pc = player.GetComponent<PlayerController>();
             if (pc != null)
@@ -133,7 +135,6 @@ public class WandererController : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= amount;
-
         StartCoroutine(HitFlash());
 
         if (currentHealth <= 0)
@@ -158,7 +159,9 @@ public class WandererController : MonoBehaviour
         rb.velocity = Vector2.zero;
         rb.isKinematic = true;
 
-        GetComponent<Collider2D>().enabled = false;
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+            col.enabled = false;
 
         Destroy(gameObject, 2f);
     }
